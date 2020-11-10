@@ -7,13 +7,36 @@ import { renderToString } from 'react-dom/server';
 const assets = require(process.env.RAZZLE_ASSETS_MANIFEST);
 
 export const renderApp = (req, res) => {
+  const context = {};
   const html = renderToString(
-    <StaticRouter location={req.url}>
+    <StaticRouter context={context} location={req.url}>
       <App />
     </StaticRouter>
   );
-  res.json({ html });
-  return { html };
+  // res.json({ html });
+  return { html: `<!doctype html>
+  <html lang="">
+  <head>
+      <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+      <meta charset="utf-8" />
+      <title>Welcome to Razzle</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      ${
+        assets.client.css
+          ? `<link rel="stylesheet" href="${assets.client.css}">`
+          : ''
+      }
+      ${
+        process.env.NODE_ENV === 'production'
+          ? `<script src="${assets.client.js}" defer></script>`
+          : `<script src="${assets.client.js}" defer crossorigin></script>`
+      }
+  </head>
+  <body>
+      <div id="root">${html}</div>
+  </body>
+</html>`
+  };
 };
 
 const server = express();
